@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Environment
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+
+# Outputs
+경매/output/
+공매/output/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
