@@ -167,6 +167,11 @@ class CourtAuctionCollector(BaseCollector):
         report_path = (
             RAW_DIR / f"discovery_report_{timestamp}.json"
         )
+        
+        report_path.parent.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
 
         report_path.write_text(
             json.dumps(
@@ -536,6 +541,11 @@ class CourtAuctionCollector(BaseCollector):
             "groupTotalCount": group_total_count or 0,
             "items": all_items,
         }
+        
+        raw_path.parent.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
 
         raw_path.write_text(
             json.dumps(
@@ -617,6 +627,11 @@ class CourtAuctionCollector(BaseCollector):
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         output_path = RAW_DIR / f"main_info_{timestamp}.json"
+
+        output_path.parent.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
 
         output_path.write_text(
             json.dumps(
