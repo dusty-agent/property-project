@@ -57,7 +57,7 @@ def main() -> None:
         print("\n[실패] 경매 수집 중 오류가 발생했습니다.")
         print(f"[오류 종류] {type(error).__name__}")
         print(f"[오류 내용] {error}")
-        return
+        raise
 
     raw_items = result.rows
 
@@ -100,7 +100,7 @@ def main() -> None:
                 f"[오류 내용] "
                 f"{error}"
             )
-            return
+            raise
 
     print()
     print("[병합 결과]")
@@ -144,7 +144,7 @@ def main() -> None:
             f"[오류 내용] "
             f"{error}"
         )
-        return
+        raise
 
     print()
     print("[JSON 저장 완료]")
@@ -183,7 +183,7 @@ def main() -> None:
             f"[오류 내용] "
             f"{error}"
         )
-        return
+        raise
 
     print(
         f"- Dustie UI 복사: "

@@ -1,53 +1,75 @@
-name: Daily Court Auction Collection
+name: Daily Seoul Central Auction
 
 on:
   workflow_dispatch:
 
   schedule:
-    # 매일 오전 6시 30분 KST
-    # GitHub Actions cron은 UTC 기준입니다.
-    - cron: "30 21 * * *"
-
-permissions:
-  contents: write
+    - cron: "30 7 * * *"
+      timezone: "Asia/Seoul"
 
 jobs:
-  collect:
+  collect-and-publish:
+    name: Collect and publish auction data
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: 경매
-
     steps:
-      - name: Checkout repository
+      - name: Checkout property project
         uses: actions/checkout@v4
+        with:
+          path: property-project
+
+      - name: Checkout Dustie web
+        uses: actions/checkout@v4
+        with:
+          repository: dusty-agent/dustie-web
+          token: ${{ secrets.DUSTIE_REPO_TOKEN }}
+          path: dustie-web
+          ref: main
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: property-project/경매/requirements.txt
 
-      - name: Install dependencies
+      - name: Install Python dependencies
+        working-directory: property-project/경매
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run daily auction collector
-        run: python run_daily.py
-
-      - name: Commit generated JSON
+      - name: Collect Seoul Central Court auctions
+        working-directory: property-project/경매
+        env:
+          DUSTIE_DATA_DIR: ${{ github.workspace }}/dustie-web/public/data
+          PYTHONUTF8: "1"
+          TZ: "Asia/Seoul"
         run: |
-          cd ..
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          python run_daily.py
 
-          git add "경매/output/json/auction_latest.json"
-          git add "경매/output/json/auction_B000210_"*.json
+      - name: Validate generated JSON
+        run: |
+          test -f dustie-web/public/data/auction_latest.json
+
+          python -m json.tool \
+            dustie-web/public/data/auction_latest.json \
+            > /dev/null
+
+          echo "auction_latest.json validation completed."
+
+      - name: Commit and push Dustie data
+        working-directory: dustie-web
+        run: |
+          git config user.name "dustydraft"
+          git config user.email "soyoung@dustydraft.com"
+
+          git add public/data/auction_latest.json
 
           if git diff --cached --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "data: update Seoul Central auction listings"
-            git push
+            echo "No auction data changes to commit."
+            exit 0
           fi
+
+          git commit -m "data: update Seoul Central auction listings"
+          git push origin main
