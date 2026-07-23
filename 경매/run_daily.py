@@ -3,6 +3,8 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 import shutil
+import os
+from zoneinfo import ZoneInfo
 
 from src.collector.mapper import merge_items
 from src.collector.nationwide import NationwideCollector
@@ -18,7 +20,10 @@ OUTPUT_JSON_DIR = (
 )
 
 DUSTIE_DATA_DIR = Path(
-    r"C:\Users\user\dev\dustie-web\public\data"
+    os.getenv(
+        "DUSTIE_DATA_DIR",
+        r"C:\Users\user\dev\dustie-web\public\data",
+    )
 )
 
 COURT_CODE = "B000210"
@@ -27,12 +32,12 @@ COURT_NAME = "서울중앙지방법원"
 
 def main() -> None:
     # 실제 운영 시 사용
-    # target_date = datetime.now().strftime(
-    #     "%Y%m%d"
-    # )
+    target_date = datetime.now(
+        ZoneInfo("Asia/Seoul")
+    ).strftime("%Y%m%d")
 
     # 2026-07-23 데이터 재테스트 시 아래처럼 잠깐 고정
-    target_date = "20260723"
+    # target_date = "20260723"
 
     print("=" * 64)
     print("서울중앙지방법원 일일 경매 수집")
