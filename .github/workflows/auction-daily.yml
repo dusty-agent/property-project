@@ -73,6 +73,7 @@ jobs:
 
       - name: Commit public auction data
         working-directory: property-project
+        shell: bash
         run: |
           git config user.name "dustydraft"
           git config user.email "soyoung@dustydraft.com"
@@ -84,5 +85,19 @@ jobs:
             exit 0
           fi
 
-          git commit -m "data: update Seoul Central auction listings"
-          git push origin main
+          git commit -m "data: update nationwide court auction listings"
+
+          for attempt in 1 2 3; do
+            git pull --rebase origin main
+
+            if git push origin main; then
+              echo "Auction data pushed successfully."
+              exit 0
+            fi
+
+            echo "Push failed. Retrying..."
+            sleep $((attempt * 10))
+          done
+
+          echo "Push failed after 3 attempts."
+          exit 1
