@@ -1,4 +1,4 @@
-name: Daily Seoul Central Auction
+name: Daily Nationwide Court Auctions
 
 on:
   workflow_dispatch:
@@ -34,7 +34,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Collect Seoul Central Court auctions
+      - name: Collect nationwide court auctions
         working-directory: property-project/경매
         shell: bash
         env:
