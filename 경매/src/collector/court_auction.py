@@ -3,7 +3,7 @@ import re
 from datetime import date, datetime
 from pathlib import Path
 from urllib.parse import urljoin
-
+import time
 import requests
 
 from src.collector.base import BaseCollector
@@ -51,6 +51,7 @@ class CourtAuctionCollector(BaseCollector):
         url: str,
         referer: str | None = None,
         accept: str | None = None,
+        max_attempts: int = 4,
     ) -> requests.Response:
         """공통 GET 요청 함수입니다."""
         headers: dict[str, str] = {}
@@ -61,17 +62,50 @@ class CourtAuctionCollector(BaseCollector):
         if accept:
             headers["Accept"] = accept
 
-        response = self.session.get(
-            url,
-            headers=headers,
-            timeout=DEFAULT_TIMEOUT_SECONDS,
-        )
-        response.raise_for_status()
+        last_error: Exception | None = None
 
-        # 법원경매 페이지와 XML은 UTF-8 기반입니다.
-        response.encoding = "utf-8"
+        for attempt in range(1, max_attempts + 1):
+            try:
+                print(
+                    f"- GET 요청 {attempt}/{max_attempts}: {url}"
+                )
 
-        return response
+                response = self.session.get(
+                    url,
+                    headers=headers,
+                    # 연결 60초, 응답 읽기 90초
+                    timeout=(60, 90),
+                )
+
+                response.raise_for_status()
+                response.encoding = "utf-8"
+
+                return response
+
+            except (
+                requests.exceptions.ConnectTimeout,
+                requests.exceptions.ReadTimeout,
+                requests.exceptions.ConnectionError,
+            ) as error:
+                last_error = error
+
+                print(
+                    f"[접속 실패] {type(error).__name__}: {error}"
+                )
+
+                if attempt < max_attempts:
+                    wait_seconds = attempt * 20
+
+                    print(
+                        f"- {wait_seconds}초 후 다시 시도합니다."
+                    )
+
+                    time.sleep(wait_seconds)
+
+        raise RuntimeError(
+            f"법원경매 사이트 접속에 {max_attempts}회 실패했습니다: "
+            f"{url}"
+        ) from last_error
 
     def initialize_session(self) -> dict:
         """루트 및 메인 페이지에 접속해 WebSquare 세션을 생성합니다."""
