@@ -34,27 +34,32 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-          - name: Collect Seoul Central Court auctions
-          shell: bash
-          run: |
-            for attempt in 1 2 3; do
-              echo "Collection attempt ${attempt}/3"
-        
-              if python run_daily.py; then
-                echo "Collection succeeded."
-                exit 0
-              fi
-        
-              if [ "$attempt" -lt 3 ]; then
-                wait_seconds=$((attempt * 60))
-                echo "Collection failed."
-                echo "Retrying in ${wait_seconds} seconds..."
-                sleep "$wait_seconds"
-              fi
-            done
-        
-            echo "Collection failed after 3 attempts."
-            exit 1
+      - name: Collect Seoul Central Court auctions
+        working-directory: property-project/경매
+        shell: bash
+        env:
+          DUSTIE_DATA_DIR: ${{ github.workspace }}/property-project/docs/data
+          PYTHONUTF8: "1"
+          TZ: Asia/Seoul
+        run: |
+          for attempt in 1 2 3; do
+            echo "Collection attempt ${attempt}/3"
+
+            if python run_daily.py; then
+              echo "Collection succeeded."
+              exit 0
+            fi
+
+            if [ "$attempt" -lt 3 ]; then
+              wait_seconds=$((attempt * 60))
+              echo "Collection failed."
+              echo "Retrying in ${wait_seconds} seconds..."
+              sleep "$wait_seconds"
+            fi
+          done
+
+          echo "Collection failed after 3 attempts."
+          exit 1
 
       - name: Validate generated JSON
         run: |
