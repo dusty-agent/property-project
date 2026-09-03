@@ -3,10 +3,6 @@ name: Daily Nationwide Court Auctions
 on:
   workflow_dispatch:
 
-  schedule:
-    - cron: "30 7 * * *"
-      timezone: "Asia/Seoul"
-
 permissions:
   contents: write
 
